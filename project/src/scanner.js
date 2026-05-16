@@ -7,11 +7,14 @@ export function scanRepository(repoPath) {
     let jsCount = 0
     let totalLines = 0
     let blankLines = 0
+    let commentLines = 0
 
     for (const file of files) {
+
         const filePath = path.join(repoPath, file)
 
         if (path.extname(file) === ".js") {
+
             jsCount++
 
             const content = fs.readFileSync(filePath, "utf-8")
@@ -20,9 +23,25 @@ export function scanRepository(repoPath) {
 
             totalLines += lines.length
 
-            for (const line of lines) {
+            for (let i = 0; i < lines.length; i++) {
+
+                const line = lines[i]
+
+                const isLastLine = i === lines.length - 1
+
+
                 if (line.trim() === "") {
+
+                    if (isLastLine) {
+                        continue
+                    }
+
                     blankLines++
+                }
+
+
+                if (line.trim().startsWith("//")) {
+                    commentLines++
                 }
             }
         }
@@ -32,7 +51,8 @@ export function scanRepository(repoPath) {
         javascript: {
             fileCount: jsCount,
             totalLines: totalLines,
-            blankLines: blankLines
+            blankLines: blankLines,
+            commentLines: commentLines
         }
     }
 }
