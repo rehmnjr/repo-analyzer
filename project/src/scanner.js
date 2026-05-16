@@ -1,23 +1,57 @@
 import fs from "fs"
 import path from "path"
 
+function getAllFiles(dirPath) {
+
+    let results = []
+
+    const files = fs.readdirSync(dirPath)
+
+    for (const file of files) {
+
+        const filePath = path.join(dirPath, file)
+
+        const stat = fs.statSync(filePath)
+
+        if (stat.isDirectory()) {
+
+            // Ignore node_modules
+            if (file === "node_modules") {
+                continue
+            }
+
+            results = results.concat(
+                getAllFiles(filePath)
+            )
+
+        } else {
+
+            results.push(filePath)
+        }
+    }
+
+    return results
+}
+
 export function scanRepository(repoPath) {
-    const files = fs.readdirSync(repoPath)
+
+    const files = getAllFiles(repoPath)
 
     let jsCount = 0
     let totalLines = 0
     let blankLines = 0
     let commentLines = 0
 
-    for (const file of files) {
+    for (const filePath of files) {
 
-        const filePath = path.join(repoPath, file)
-
-        if (path.extname(file) === ".js") {
+        if (path.extname(filePath) === ".js") {
 
             jsCount++
 
-            const content = fs.readFileSync(filePath, "utf-8")
+            const content = fs.readFileSync(
+                filePath,
+                "utf-8"
+            )
 
             const lines = content.split("\n")
 
@@ -27,8 +61,8 @@ export function scanRepository(repoPath) {
 
                 const line = lines[i]
 
-                const isLastLine = i === lines.length - 1
-
+                const isLastLine =
+                    i === lines.length - 1
 
                 if (line.trim() === "") {
 
@@ -39,8 +73,9 @@ export function scanRepository(repoPath) {
                     blankLines++
                 }
 
-
-                if (line.trim().startsWith("//")) {
+                if (
+                    line.trim().startsWith("//")
+                ) {
                     commentLines++
                 }
             }
@@ -50,9 +85,9 @@ export function scanRepository(repoPath) {
     return {
         javascript: {
             fileCount: jsCount,
-            totalLines: totalLines,
-            blankLines: blankLines,
-            commentLines: commentLines
+            totalLines,
+            blankLines,
+            commentLines
         }
     }
 }
